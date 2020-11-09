@@ -17,7 +17,7 @@ def conv(image, kernel):
     Hi, Wi = image.shape
     Hk, Wk = kernel.shape
     out = np.zeros((Hi, Wi))
-
+    kernel = kernel[::-1,::-1]
     # For this assignment, we will use edge values to pad the images.
     # Zero padding will make derivatives at the image boundary very big,
     # whereas we want to ignore the edges at the boundary.
@@ -25,7 +25,9 @@ def conv(image, kernel):
     pad_width1 = Wk // 2
     pad_width = ((pad_width0,pad_width0),(pad_width1,pad_width1))
     padded = np.pad(image, pad_width, mode='edge')
-
+    for i in range(Hi):
+        for j in range(Wi):
+            out[i,j] = (kernel*padded[i:i+Hk, j:j+Wk]).sum()
     ### YOUR CODE HERE
     pass
     ### END YOUR CODE
@@ -50,9 +52,12 @@ def gaussian_kernel(size, sigma):
     """  
     
     kernel = np.zeros((size, size))
+    k = (size - 1)//2
 
     ### YOUR CODE HERE
-    pass
+    for i in range(size):
+        for j in range(size):
+            kernel[i,j] = 1/(2*np.pi*sigma**2)*np.exp(-((i-k)**2+(j-k)**2)/(2*sigma**2))
     ### END YOUR CODE
 
     return kernel

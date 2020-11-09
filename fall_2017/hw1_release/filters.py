@@ -138,8 +138,17 @@ def cross_correlation(f, g):
     
     out = None
     ### YOUR CODE HERE
-    g = g[::-1,::-1]
-    out = conv_fast(f,g)
+    Hi, Wi = f.shape
+    newG = g
+    Hk, Wk = newG.shape
+    out = np.zeros((Hi, Wi))
+    padW = Wk //2
+    padH = Hk //2
+    ### YOUR CODE HERE
+    img_new = zero_pad(f, padH, padW)
+    for i in range(Hi):
+        for j in range(Wi):
+            out[i,j] = (newG*img_new[i:i+Hk, j:j+Wk]).sum()    ### END YOUR CODE
     ### END YOUR CODE
 
     return out
@@ -159,10 +168,17 @@ def zero_mean_cross_correlation(f, g):
 
     out = None
     ### YOUR CODE HERE
-    g = g[::-1,::-1]
     newG = g-g.mean()
-    out = conv_fast(f,newG)
-    ### END YOUR CODE
+    Hi, Wi = f.shape
+    Hk, Wk = newG.shape
+    out = np.zeros((Hi, Wi))
+    padW = Wk //2
+    padH = Hk //2
+    ### YOUR CODE HERE
+    img_new = zero_pad(f, padH, padW)
+    for i in range(Hi):
+        for j in range(Wi):
+            out[i,j] = (newG*img_new[i:i+Hk, j:j+Wk]).sum()    ### END YOUR CODE
 
     return out
 
