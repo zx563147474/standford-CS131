@@ -21,7 +21,7 @@ def hog_feature(image, pixel_per_cell = 8):
         hogImage: an image representation of hog provided by skimage
     '''
     ### YOUR CODE HERE
-    pass
+    hogFeature, hogImage = feature.hog(image, pixels_per_cell=(pixel_per_cell, pixel_per_cell), visualize=True)
     ### END YOUR CODE
     return (hogFeature, hogImage)
 
@@ -50,9 +50,23 @@ def sliding_window(image, base_score, stepSize, windowSize, pixel_per_cell=8):
     H,W = image.shape
     pad_image = np.lib.pad(image, ((winH//2,winH-winH//2),(winW//2, winW-winW//2)), mode='constant')
     response_map = np.zeros((H//stepSize+1, W//stepSize+1))
-    
+#     print(pad_image.shape,windowSize)
     ### YOUR CODE HERE
-    pass
+    for i in range(0, H+1, stepSize):
+        for j in range(0, W+1, stepSize):
+            
+#             print(i,j,winH,winW,H,W,pad_image[i:i+winH, j:j+winW].shape,pad_image.shape)
+            hogFeature = feature.hog(pad_image[i:i+winH, j:j+winW], \
+                                                 pixels_per_cell = (pixel_per_cell,pixel_per_cell))
+            
+            score = hogFeature.dot(base_score)
+            response_map[i//stepSize,j//stepSize] = score
+            
+            if score > max_score:
+                
+                max_score, maxr, maxc = score, i-winH//2, j-winW//2
+#                 print(i,j,maxr,maxc)
+
     ### END YOUR CODE
     
     
@@ -62,7 +76,7 @@ def sliding_window(image, base_score, stepSize, windowSize, pixel_per_cell=8):
 def pyramid(image, scale=0.9, minSize=(200, 100)):
     '''
     Generate image pyramid using the given image and scale.
-    Reducing the size of the image until on of the height or
+    Reducing the size of the image until one of the height or
     width reaches the minimum limit. In the ith iteration, 
     the image is resized to scale^i of the original image.
     
@@ -79,9 +93,17 @@ def pyramid(image, scale=0.9, minSize=(200, 100)):
     images = []
     current_scale = 1.0
     images.append((current_scale, image))
+    
     # keep looping over the pyramid
     ### YOUR CODE HERE
-    pass
+    currH, currW = image.shape
+    current_scale *= scale
+    while currH > minSize[0] and currW >minSize[1]:
+        image = rescale(image,current_scale)
+        images.append((current_scale,image))
+        current_scale *= scale
+        currH, currW = image.shape
+#         print(current_scale,currH, currW)
     ### END YOUR CODE
     return images
 
@@ -108,7 +130,12 @@ def pyramid_score(image,base_score, shape, stepSize=20, scale = 0.9, pixel_per_c
     max_response_map =np.zeros(image.shape)
     images = pyramid(image, scale)
     ### YOUR CODE HERE
-    pass
+    for scale, image in images:
+        score, r, c, response_map = sliding_window(image, base_score, \
+                                                               stepSize, shape, pixel_per_cell=pixel_per_cell)
+        if score > max_score:
+            max_score, maxr, maxc, max_response_map = score, r, c, response_map
+            max_scale = scale
     ### END YOUR CODE
     return max_score, maxr, maxc, max_scale, max_response_map
 
@@ -134,7 +161,13 @@ def compute_displacement(part_centers, face_shape):
     '''
     d = np.zeros((part_centers.shape[0],2))
     ### YOUR CODE HERE
-    pass
+    face_center = np.array([(face_shape[0]-1)/2, (face_shape[1]-1)/2])
+
+    d = face_center - part_centers
+    mu = np.mean(d, axis=0)
+    mu = mu.astype('int64')
+    sigma = np.std(d, axis=0)
+        
     ### END YOUR CODE
     return mu, sigma
         
@@ -150,7 +183,12 @@ def shift_heatmap(heatmap, mu):
             new_heatmap: np array of (h,w)
     '''
     ### YOUR CODE HERE
-    pass
+    H,W = heatmap.shape
+    newHeatmap = heatmap/np.sqrt(np.sum(heatmap**2))
+    y_shift = int(mu[0])
+    x_shift = int(mu[1])
+    newHeatmap = np.roll(newHeatmap,y_shift,axis=0)
+    new_heatmap = np.roll(newHeatmap,x_shift,axis=1)
     ### END YOUR CODE
     return new_heatmap
     
@@ -170,7 +208,13 @@ def gaussian_heatmap(heatmap_face, heatmaps, sigmas):
         new_image: an image np array of (h,w) after gaussian convoluted
     '''
     ### YOUR CODE HERE
-    pass
+    heatmap = heatmap_face.copy()
+    for i,heatMap in enumerate(heatmaps):
+        gaussion_map = gaussian(heatmap,sigma=sigmas[i])
+        heatmap+=gaussion_map
+
+    index=np.argmax(heatmap)
+    r, c = np.unravel_index(index,heatmap_face.shape)
     ### END YOUR CODE
     return heatmap, r , c
             

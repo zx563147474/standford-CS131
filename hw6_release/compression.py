@@ -20,7 +20,13 @@ def compress_image(image, num_values):
     #     1. Get SVD of the image
     #     2. Only keep the top `num_values` singular values, and compute `compressed_image`
     #     3. Compute the compressed size
-    pass
+    u,s,vt = np.linalg.svd(image)
+    
+    newU = u[:,:num_values]
+    newS = np.diag(s[:num_values])
+    newVt = vt[:num_values,:]
+    compressed_image = newU@newS@newVt
+    compressed_size = newU.size + num_values + newVt.size
     # END YOUR CODE
 
     assert compressed_image.shape == image.shape, \

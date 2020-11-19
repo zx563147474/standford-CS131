@@ -9,7 +9,7 @@ import os
 
 def load_frames(imgs_dir):
     frames = [img_as_float(imread(os.path.join(imgs_dir, frame), 
-                                               as_grey=True)) \
+                                               as_gray=True)) \
               for frame in sorted(os.listdir(imgs_dir))]
     return frames
 
@@ -31,7 +31,7 @@ def animated_frames(frames, figsize=(10,8)):
         return [im,]
 
     ani = animation.FuncAnimation(fig, animate, frames=len(frames),
-                                  interval=60, blit=True)
+                                  interval=200, blit=True)
 
     return ani
 
@@ -52,7 +52,7 @@ def animated_scatter(frames, trajs, figsize=(10,8)):
         return [im, scat,]
 
     ani = animation.FuncAnimation(fig, animate, frames=len(frames),
-                                  interval=60, blit=True)
+                                  interval=200, blit=True)
 
     return ani
 
@@ -70,6 +70,6 @@ def animated_bbox(frames, bboxes, figsize=(10,8)):
         return [im, bbox,]
 
     ani = animation.FuncAnimation(fig, animate, frames=len(frames),
-                                  interval=60, blit=True)
+                                  interval=200, blit=True)
 
     return ani

@@ -1,6 +1,6 @@
 import numpy as np
-
-
+from scipy.spatial.distance import cdist
+from collections import Counter 
 def compute_distances(X1, X2):
     """Compute the L2 distance between each point in X1 and each point in X2.
     It's possible to vectorize the computation entirely (i.e. not use any loop).
@@ -26,8 +26,13 @@ def compute_distances(X1, X2):
     # in particular you should not use functions from scipy.
     #
     # HINT: Try to formulate the l2 distance using matrix multiplication
-
-    pass
+    
+    #dists = cdist(X1,X2)
+    ##
+    x1Sum = np.sum(X1**2,axis=1)
+    x2Sum = np.sum(X2**2,axis=1)
+    x1x2 = X1@X2.T
+    dists = np.sqrt(-2 * x1x2 + x1Sum.reshape(-1,1)+ x2Sum)
     # END YOUR CODE
 
     assert dists.shape == (M, N), "dists should have shape (M, N), got %s" % dists.shape
@@ -65,7 +70,11 @@ def predict_labels(dists, y_train, k=1):
         # label.
 
         # YOUR CODE HERE
-        pass
+        orders = np.argsort(dists[i,:])
+        nearest = orders[:k]
+        closest_y = y_train[nearest]
+        count = Counter(closest_y)
+        y_pred[i] = count.most_common(1)[0][0]
         # END YOUR CODE
 
     return y_pred
@@ -92,7 +101,7 @@ def split_folds(X_train, y_train, num_folds):
         y_train: numpy array of shape (N,) containing the label of each example
         num_folds: number of folds to split the data into
 
-    jeturns:
+    returns:
         X_trains: numpy array of shape (num_folds, train_size * (num_folds-1) / num_folds, D)
         y_trains: numpy array of shape (num_folds, train_size * (num_folds-1) / num_folds)
         X_vals: numpy array of shape (num_folds, train_size / num_folds, D)
@@ -111,7 +120,17 @@ def split_folds(X_train, y_train, num_folds):
 
     # YOUR CODE HERE
     # Hint: You can use the numpy array_split function.
-    pass
+    X_folds = np.array_split(X_train, num_folds, axis=0)
+    y_train = y_train.reshape(-1,1)
+    y_folds = np.array_split(y_train, num_folds, axis=0)
+    
+    for i in range(num_folds):
+        X_trains[i,:,:] = np.vstack(X_folds[:i] + X_folds[i+1:])
+        X_vals[i,:,:] = X_folds[i]
+        y_trains[i,:] = np.vstack(y_folds[:i] + y_folds[i+1:])[:,0]
+        y_vals[i,:] = y_folds[i][:,0]
+
+        
     # END YOUR CODE
 
     return X_trains, y_trains, X_vals, y_vals
